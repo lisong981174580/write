@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        html,body{
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        *{
+            box-sizing: border-box;
+        }
+        .box{
+            width: 1000px;
+            height: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+        .left{
+            width: 800px;
+            height: 100%;
+            border: 1px solid #ccc;
+            float: left;
+            background: grey;
+            position: relative;
+        }
+        .right{
+            width: 200px;
+            height: 100%;
+           background: darkcyan;
+            float: right;
+            position: relative;
+        }
+        .show{
+            width: 100%;
+            height: auto;
+            margin: 10px auto;
+        }
+        .show div{
+            width: 100%;
+            line-height: 50px;
+            text-align: center;
+			height: 50px;
+			font-size: 30px;
+			font-weight: 600;
+			color: black;
+        }
+        .show p{
+            display: block;
+            width: 120px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border: 2px solid #666;
+            border-radius: 0.5rem;;
+			border: 1px solid black;
+			background: white;
+			margin: 10px auto;
+        }
+        .button{
+            cursor: pointer;
+        	background: black;
+			color: white;
+			width:120px ;
+			height: 50px;
+			margin: 30px auto;
+		    text-align: center;
+		    line-height: 50px;
+		    border-radius: 50%;
+        }
+        .letter{
+            width: 80px;
+            height: 80px;
+            background-size: 80px 80px;
+            position: absolute;
+            text-align: center;
+            border:2px solid #555;
+            background: #eee;
+            color: #333333;
+            font-size: 30px;
+            line-height: 80px;
+            font-weight: bold;
+
+        }
+    </style>
+    <script>
+    window.onload=function(){
+        function Game(m,d,life,gq){
+            this.main=m;
+            this.defen=d;
+            this.life=life;
+            this.guanqia=gq;
+            this.obj={};
+            this.fenshu=0;
+            this.shengming=5;
+            this.guanqiap=1;
+            this.setinterval=null;
+            this.chongkai=false;
+        }
+
+        Game.prototype={
+            start:function(){
+                this.chongkai=true;
+                for(var i=0;i<3;i++){
+                    this._createletter();
+                }
+                this._move();
+                this._onkeydown();
+            },
+            end:function(){
+                this._gameover();
+            },
+
+            _createletter:function () {
+                var newletter = document.createElement("div");
+                newletter.className = "letter";
+                do {
+                    //得到随机数对应的字母
+                    var newzimu = String.fromCharCode(Math.floor(Math.random() * 26 + 65));
+                    newletter.innerHTML=newzimu;
+                } while (this.obj[newzimu]);
+
+                do {
+                    var x = Math.random() * 720;
+                    newletter.style.left = x + "px";
+                } while (this._check(x));
+
+
+
+                var y = Math.random() * 150;
+                newletter.style.top = y + "px";
+
+                this.obj[newzimu] = {left: x,top: y,ele: newletter};
+                this.main.appendChild(newletter);
+            },
+            _check:function(left){
+                for(var i in this.obj){
+                    if(left>this.obj[i].left-80 && left<this.obj[i].left+80){
+                        return true;
+                    }
+                }
+            },
+            _move:function(){
+
+                this.setinterval=setInterval(function(){
+                    for(var i in this.obj){
+                        var t=this.obj[i].top;
+                        t+=(1+this.guanqiap*2);
+                        this.obj[i].top=t;
+                        this.obj[i].ele.style.top=t+"px";
+
+                        if(t>this.main.offsetHeight-this.obj[i].ele.offsetHeight){
+                            this.main.removeChild(this.obj[i].ele);
+                            delete this.obj[i];
+                            this._createletter();
+                            this.shengming--;
+                            this.life.innerHTML=this.shengming;
+                            if(this.shengming<0){
+                                this.life.innerHTML=0;
+                                this._gameover();
+                                return;
+                            }
+
+                        }
+                    }
+                }.bind(this),50);
+            },
+            _onkeydown:function(){
+                document.onkeydown=function(e){
+                    var el=e.keyCode;
+                    var l=String.fromCharCode(el);
+
+                    if(this.obj[l]){
+                        this.main.removeChild(this.obj[l].ele);
+                        delete this.obj[l];
+                        this._createletter();
+                        this.fenshu++;
+                        this.defen.innerHTML=this.fenshu;
+                        console.log(this.fenshu);
+                        if(this.fenshu%10==0){
+
+                            this.guanqiap++;
+                           
+
+                        }
+
+                    }
+                }.bind(this);
+            },
+            _gameover:function(){
+                clearInterval(this.setinterval);
+                alert(`游戏结束，得分${this.fenshu}`);
+                this.fenshu=0;
+                this.defen.innerHTML=this.fenshu;
+                this.shengming=5;
+                this.life.innerHTML=this.shengming;
+                this.guanqiap=1;
+                this.guanqia.innerHTML=this.guanqiap;
+                this.main.innerHTML="";
+                this.obj={};
+                this.chongkai=false;
+            },
+            stop:function(){
+                clearInterval(this.setinterval);
+                document.onkeydown=null;
+            },
+            play:function(){
+                this._move();
+                this._onkeydown();
+            }
+        };
+
+        var left=document.querySelector(".left");
+        var startbtn=document.querySelector(".start");
+        var stopbtn=document.querySelector(".stop");
+        var endbtn=document.querySelector(".end");
+        var defen=document.querySelector(".defen p");
+        var life=document.querySelector(".life p");
+        var guanqia=document.querySelector(".guanqia p");
+
+        var game=new Game(left,defen,life,guanqia);
+
+        startbtn.onclick=function(){
+            if(game.chongkai==false){
+                game.start();
+            }
+        };
+
+        var flag=true;
+        stopbtn.onclick=function(){
+            if(flag==true){
+                game.stop();
+                stopbtn.innerHTML="继续";
+            }
+            else{
+                game.play();
+                stopbtn.innerHTML="暂停";
+            }
+            flag=!flag;
+        };
+
+        endbtn.onclick=function(){
+            game.end();
+        };
+
+
+        
+
+
+
+    //script结束
+    }
+    </script>
+</head>
+<body>
+    <div class="box">
+        <div class="left">
+
+        </div>
+        <div class="right">
+            <div class="show defen">
+                <div>得分</div>
+                <p>0</p>
+            </div>
+            <div class="show life">
+                <div>生命值</div>
+                <p>5</p>
+            </div>
+            <div class="show guanqia">
+                <div>关卡</div>
+                <p>1</p>
+            </div>
+            <div class="button start">开始</div>
+            <div class="button stop">暂停</div>
+            <div class="button end">结束</div>
+        </div>
+    </div>
+</body>
+</html>
